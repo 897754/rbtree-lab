@@ -9,6 +9,7 @@ void InsertCheck(rbtree *tree, node_t *target);
 void InsertCase1(rbtree *tree, node_t *target, node_t *uncle);
 void InsertCase2(rbtree *tree, node_t *target);
 void InsertCase3(rbtree *tree, node_t *target);
+void DeleteRecursion(node_t *nil, node_t *target);
 
 rbtree *new_rbtree(void) {
   rbtree *p = (rbtree *)calloc(1, sizeof(rbtree));
@@ -25,12 +26,17 @@ rbtree *new_rbtree(void) {
   return p;
 }
 
+void DeleteRecursion(node_t *nil, node_t *target)
+{
+  if(target == nil) return;
+  DeleteRecursion(nil, target->left);
+  DeleteRecursion(nil, target->right);
+  free(target);
+}
+
 void delete_rbtree(rbtree *t) {
   // TODO: reclaim the tree nodes's memory
-  while (t->root != t->nil)
-  {
-    rbtree_erase(t,t->root);
-  }
+  DeleteRecursion(t->nil, t->root);
   free(t->nil);
   
   free(t);
@@ -178,10 +184,13 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
     return newNode;
   }
   node_t *pre = t->root, *cur = t->root;
-
+  int count = 0;
   //pre가 넣을 위치의 부모, cur가 넣을 위치가 될 때까지 탐색
   while (cur != t->nil)
   {
+    count++;
+    if(count > 10000)
+      return NULL;
     if(cur->key <= key)
     {
       pre = cur;
