@@ -421,18 +421,39 @@ int rbtree_erase(rbtree *t, node_t *p) {
   return 1;
 }
 
+
+int SearchRec(node_t *n, node_t *nil, key_t *arr, size_t i)
+{
+  if(n == nil)
+    return i;
+  i = SearchRec(n->left, nil, arr, i);
+  arr[i] = n->key;
+  i++;
+  i = SearchRec(n->right, nil, arr, i);
+  return i;
+}
+//재귀
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
   // TODO: implement to_array
-  int i = 0;
-  while (t->root != t->nil)
-  {
-    node_t *cur = rbtree_min(t);
-    arr[i] = cur->key;
-    i++;
-    rbtree_erase((rbtree*)t,cur);
-  }
-  
+  SearchRec(t->root, t->nil, arr, 0);
 
   return 0;
 }
+ 
+
+//벌목
+// int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
+//   // TODO: implement to_array
+//   int i = 0;
+//   while (t->root != t->nil)
+//   {
+//     node_t *cur = rbtree_min(t);
+//     arr[i] = cur->key;
+//     i++;
+//     rbtree_erase((rbtree*)t,cur);
+//   }
+  
+
+//   return 0;
+// }
  
