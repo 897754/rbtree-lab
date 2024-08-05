@@ -1,5 +1,6 @@
 #include "rbtree.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 void Rotate(rbtree *tree, node_t *target);
@@ -9,6 +10,11 @@ void InsertCheck(rbtree *tree, node_t *target);
 void InsertCase1(rbtree *tree, node_t *target, node_t *uncle);
 void InsertCase2(rbtree *tree, node_t *target);
 void InsertCase3(rbtree *tree, node_t *target);
+void RemoveCase1(rbtree *tree, node_t *parent, int isRight);
+void RemoveCase2(rbtree *tree, node_t *parent, int isRight);
+void RemoveCase3(rbtree *tree, node_t *parent, int isRight);
+void RemoveCase4(rbtree *tree, node_t *parent, int isRight);
+void BlackThis(rbtree *tree, node_t *parent, int isRight);
 void DeleteRecursion(node_t *nil, node_t *target);
 
 rbtree *new_rbtree(void) {
@@ -47,7 +53,7 @@ void Rotate(rbtree *tree, node_t *target)
   if(target->parent == tree->nil)
     return;
   
-  if(target->parent->key <= target->key)
+  if(target->parent->right == target)
     RotateLeft(tree, target);
   else
     RotateRight(tree, target);
@@ -59,17 +65,16 @@ void RotateLeft(rbtree *tree, node_t *target)
   
   node_t* parent = target->parent;
 
-  if(tree->root == parent)
+  if(parent == tree->root)
   {
     tree->root = target;
-    target->color = RBTREE_BLACK;
   }
   
   parent->parent = target;
   target->left = parent;
 
   parent->right = c;
-  if(a != tree->nil)
+  if(c != tree->nil)
     c->parent = parent;
   
   target->parent = a;
@@ -92,28 +97,28 @@ void RotateRight(rbtree *tree, node_t *target)
   
   node_t* parent = target->parent;
   
-  if(tree->root == parent)
+  if(parent == tree->root)
   {
     tree->root = target;
-    target->color = RBTREE_BLACK;
   }
   
   parent->parent = target;
   target->right = parent;
 
   parent->left = c;
-  c->parent = parent;
+  if(c != tree->nil)
+    c->parent = parent;
   
   target->parent = a;
   if(a != tree->nil)
   {
     if(a->key <= target->key)
     {
-      a->left = target;
+      a->right = target;
     } 
     else
     {
-      a->right = target;
+      a->left = target;
     }
   }
 }
@@ -148,9 +153,15 @@ void InsertCase1(rbtree *tree, node_t *target, node_t *uncle)
 
 void InsertCheck(rbtree *tree, node_t *target)
 {
+  if(target->parent == tree->root)
+  {
+    target->parent->color = RBTREE_BLACK;
+    return;
+  }
+
   //FLAG : 자신이 오른쪽일 경우 1, 왼쪽 0
-  int myFlag = (target->parent->key <= target->key) ? 1:0;
-  int parentFlag = (target->parent->parent->key <= target->parent->key) ? 1:0;
+  int myFlag = (target->parent->right == target) ? 1:0;
+  int parentFlag = (target->parent->parent->right == target->parent) ? 1:0;
   node_t *uncle = (parentFlag == 1 ? target->parent->parent->left : target->parent->parent->right);
 
   if(uncle->color == RBTREE_BLACK)
@@ -171,7 +182,7 @@ void InsertCheck(rbtree *tree, node_t *target)
 }
 
 node_t *rbtree_insert(rbtree *t, const key_t key) {
-  // TODO: implement insert
+  // 트리가 비어있을 경우
   if(t->root == t->nil)
   {
     node_t *newNode = (node_t*)malloc(sizeof(node_t));
@@ -276,12 +287,152 @@ node_t *rbtree_max(const rbtree *t) {
   return cur;
 }
 
+void RemoveCase1(rbtree *tree, node_t *parent, int isRight)
+{
+  node_t* brother = (isRight == 1? parent->left:parent->right);
+  brother->color = RBTREE_BLACK;
+  parent->color = RBTREE_RED;
+  Rotate(tree, brother);
+  BlackThis(tree, parent, isRight);
+}
+void RemoveCase2(rbtree *tree, node_t *parent, int isRight)
+{
+  node_t* brother = (isRight == 1? parent->left:parent->right);
+  brother->color = RBTREE_RED;
+  if(parent->color == RBTREE_RED || parent == tree->root)
+  {
+    parent->color = RBTREE_BLACK;
+    return;
+  }
+  isRight = (parent->parent->key <= parent->key ? 1:0);
+  BlackThis(tree, parent->parent, isRight);
+}
+void RemoveCase3(rbtree *tree, node_t *parent, int isRight)
+{
+  node_t* brother = (isRight == 1? parent->left:parent->right);
+  node_t *Nopposite = (isRight==0? brother->left : brother->right);
+  brother->color = RBTREE_RED;
+  Nopposite->color = RBTREE_BLACK;
+  Rotate(tree, Nopposite);
+  RemoveCase4(tree,parent,isRight);
+}
+void RemoveCase4(rbtree *tree, node_t *parent, int isRight)
+{
+  node_t* brother = (isRight == 1? parent->left:parent->right);
+  node_t *opposite = (isRight==1? brother->left : brother->right);
+  brother->color = parent->color;
+  opposite->color = RBTREE_BLACK;
+  parent->color = RBTREE_BLACK;
+  Rotate(tree, brother);
+}
+void BlackThis(rbtree *tree, node_t *parent, int isRight)
+{
+  node_t* brother = (isRight == 1? parent->left : parent->right);
+  if(brother->color == RBTREE_RED)
+  {
+    RemoveCase1(tree, parent, isRight);
+    return;
+  }
+  node_t *opposite = (isRight==1? brother->left : brother->right);
+  if(opposite->color == RBTREE_RED)
+  {
+    RemoveCase4(tree,parent,isRight);
+    return;
+  }
+  if(brother->left->color == RBTREE_BLACK && brother->right->color == RBTREE_BLACK)
+  {
+    RemoveCase2(tree,parent,isRight);
+    return;
+  }
+  RemoveCase3(tree,parent,isRight);
+}
+
 int rbtree_erase(rbtree *t, node_t *p) {
+  if(t == NULL || t->root == t->nil || t->nil == p) return 0;
+
+  node_t* parent = p->parent;
+
+
+
+  //자식중 NIL 있음
+  int isRight = 0;
+  if(t->root != p)
+   isRight = (parent->right == p ? 1:0);
+
+  if(p->left == t->nil || p->right == t->nil)
+  {
+    node_t *child = (p->left == t->nil ? p->right:p->left);
+    // 삭제할 노드가 루트일 경우
+    if(t->root == p)
+    {
+      t->root = child;
+    }
+    else
+    {
+      if(isRight == 1)
+      {
+        parent->right = child;
+      }
+      else
+      {
+        parent->left = child;
+      }
+
+      if(child != t->nil)
+        child->parent = parent;
+    }
+
+
+    if(parent != t->nil && p->color == RBTREE_BLACK)
+    {
+      //Double Black
+      if(child->color == RBTREE_BLACK)
+      {
+        BlackThis(t, parent, isRight);
+      }
+      else
+      {
+        child->color = RBTREE_BLACK;
+      }
+    }
+  }
+
+
+
+  // 자식 둘다 NIL 아님. 후임자 찾기
+  else
+  {
+    isRight = 1;
+    node_t *pre = p, *cur = p->right;
+    while (cur != t->nil)
+    {
+      isRight = 0;
+      pre = cur;
+      cur = cur->left;
+    }
+    //pre가 후임자.
+    p->key = pre->key;
+    return rbtree_erase(t, pre);
+  }
+
+  free(p);
+
   // TODO: implement erase
-  return 0;
+  return 1;
 }
 
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
   // TODO: implement to_array
+  int i = 0;
+  while (t->root != t->nil)
+  {
+    node_t *cur = rbtree_min(t);
+    arr[i] = cur->key;
+    i++;
+    rbtree_erase((rbtree*)t,cur);
+  }
+  
+
   return 0;
 }
+ 
