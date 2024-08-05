@@ -14,7 +14,7 @@ void RemoveCase1(rbtree *tree, node_t *parent, int isRight);
 void RemoveCase2(rbtree *tree, node_t *parent, int isRight);
 void RemoveCase3(rbtree *tree, node_t *parent, int isRight);
 void RemoveCase4(rbtree *tree, node_t *parent, int isRight);
-void BlackThis(rbtree *tree, node_t *parent, int isRight);
+void ExtraBlack(rbtree *tree, node_t *parent, int isRight);
 void DeleteRecursion(node_t *nil, node_t *target);
 
 rbtree *new_rbtree(void) {
@@ -66,9 +66,7 @@ void RotateLeft(rbtree *tree, node_t *target)
   node_t* parent = target->parent;
 
   if(parent == tree->root)
-  {
     tree->root = target;
-  }
   
   parent->parent = target;
   target->left = parent;
@@ -81,13 +79,9 @@ void RotateLeft(rbtree *tree, node_t *target)
   if(a != tree->nil)
   {
     if(a->key <= target->key)
-    {
       a->right = target;
-    } 
     else
-    {
       a->left = target;
-    }
   }
 }
 void RotateRight(rbtree *tree, node_t *target)
@@ -98,9 +92,7 @@ void RotateRight(rbtree *tree, node_t *target)
   node_t* parent = target->parent;
   
   if(parent == tree->root)
-  {
     tree->root = target;
-  }
   
   parent->parent = target;
   target->right = parent;
@@ -113,13 +105,9 @@ void RotateRight(rbtree *tree, node_t *target)
   if(a != tree->nil)
   {
     if(a->key <= target->key)
-    {
       a->right = target;
-    } 
     else
-    {
       a->left = target;
-    }
   }
 }
 
@@ -167,31 +155,29 @@ void InsertCheck(rbtree *tree, node_t *target)
   if(uncle->color == RBTREE_BLACK)
   {
     if(myFlag == parentFlag)
-    {
       InsertCase3(tree, target);
-    }
     else
-    {
       InsertCase2(tree, target);
-    }
   }
   else
-  {
     InsertCase1(tree, target, uncle);
-  }
 }
 
 node_t *rbtree_insert(rbtree *t, const key_t key) {
-  // 트리가 비어있을 경우
-  if(t->root == t->nil)
-  {
+  if(t == NULL) return NULL;
+
     node_t *newNode = (node_t*)malloc(sizeof(node_t));
-    t->root = newNode;
     newNode->key = key;
-    newNode->color = RBTREE_BLACK;
+    newNode->color = RBTREE_RED;
     newNode->left = t->nil;
     newNode->right = t->nil;
     newNode->parent = t->nil;
+
+  // 트리가 비어있을 경우
+  if(t->root == t->nil)
+  {
+    t->root = newNode;
+    newNode->color = RBTREE_BLACK;
     return newNode;
   }
   node_t *pre = t->root, *cur = t->root;
@@ -199,40 +185,21 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
   //pre가 넣을 위치의 부모, cur가 넣을 위치가 될 때까지 탐색
   while (cur != t->nil)
   {
-    count++;
-    if(count > 10000)
-      return NULL;
+    pre = cur;
     if(cur->key <= key)
-    {
-      pre = cur;
       cur = cur->right;
-    }
     else if(cur->key > key)
-    {
-      pre = cur;
       cur = cur->left;
-    }
   }
 
-  node_t *newNode = (node_t*)malloc(sizeof(node_t));
   if(pre->key <= key)
-  {
     pre->right = newNode;
-  }
   else
-  {
     pre->left = newNode;
-  }
-  newNode->key = key;
-  newNode->color = RBTREE_RED;
-  newNode->left = t->nil;
-  newNode->right = t->nil;
   newNode->parent = pre;
   //상위 노드가 빨간색일 경우
   if(pre->color == RBTREE_RED)
-  {
     InsertCheck(t, newNode);
-  }
   
   
   return newNode;
@@ -257,10 +224,7 @@ node_t *rbtree_find(const rbtree *t, const key_t key) {
 
 node_t *rbtree_min(const rbtree *t) {
   // TODO: implement find
-  if (t->root == t->nil)
-  {
-    return t->nil;
-  }
+  if (t->root == t->nil)    return t->nil;
   
   node_t *cur = t->root;
   while(cur->left != t->nil)
@@ -273,10 +237,7 @@ node_t *rbtree_min(const rbtree *t) {
 
 node_t *rbtree_max(const rbtree *t) {
   // TODO: implement find
-  if (t->root == t->nil)
-  {
-    return t->nil;
-  }
+  if (t->root == t->nil)    return t->nil;
   
   node_t *cur = t->root;
   while(cur->right != t->nil)
@@ -293,7 +254,7 @@ void RemoveCase1(rbtree *tree, node_t *parent, int isRight)
   brother->color = RBTREE_BLACK;
   parent->color = RBTREE_RED;
   Rotate(tree, brother);
-  BlackThis(tree, parent, isRight);
+  ExtraBlack(tree, parent, isRight);
 }
 void RemoveCase2(rbtree *tree, node_t *parent, int isRight)
 {
@@ -305,7 +266,7 @@ void RemoveCase2(rbtree *tree, node_t *parent, int isRight)
     return;
   }
   isRight = (parent->parent->key <= parent->key ? 1:0);
-  BlackThis(tree, parent->parent, isRight);
+  ExtraBlack(tree, parent->parent, isRight);
 }
 void RemoveCase3(rbtree *tree, node_t *parent, int isRight)
 {
@@ -325,7 +286,7 @@ void RemoveCase4(rbtree *tree, node_t *parent, int isRight)
   parent->color = RBTREE_BLACK;
   Rotate(tree, brother);
 }
-void BlackThis(rbtree *tree, node_t *parent, int isRight)
+void ExtraBlack(rbtree *tree, node_t *parent, int isRight)
 {
   node_t* brother = (isRight == 1? parent->left : parent->right);
   if(brother->color == RBTREE_RED)
@@ -370,13 +331,9 @@ int rbtree_erase(rbtree *t, node_t *p) {
     else
     {
       if(isRight == 1)
-      {
         parent->right = child;
-      }
       else
-      {
         parent->left = child;
-      }
 
       if(child != t->nil)
         child->parent = parent;
@@ -387,13 +344,9 @@ int rbtree_erase(rbtree *t, node_t *p) {
     {
       //Double Black
       if(child->color == RBTREE_BLACK)
-      {
-        BlackThis(t, parent, isRight);
-      }
+        ExtraBlack(t, parent, isRight);
       else
-      {
         child->color = RBTREE_BLACK;
-      }
     }
   }
 
@@ -439,7 +392,6 @@ int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
 
   return 0;
 }
- 
 
 //벌목
 // int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
@@ -456,4 +408,3 @@ int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n) {
 
 //   return 0;
 // }
- 
