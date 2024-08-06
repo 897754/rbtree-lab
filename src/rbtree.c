@@ -62,7 +62,6 @@ void RotateLeft(rbtree *tree, node_t *target)
 {
   node_t* a = target->parent->parent;
   node_t* c = target->left;
-  
   node_t* parent = target->parent;
 
   if(parent == tree->root)
@@ -78,7 +77,7 @@ void RotateLeft(rbtree *tree, node_t *target)
   target->parent = a;
   if(a != tree->nil)
   {
-    if(a->key <= target->key)
+    if(a->right == parent)
       a->right = target;
     else
       a->left = target;
@@ -88,7 +87,6 @@ void RotateRight(rbtree *tree, node_t *target)
 {
   node_t* a = target->parent->parent;
   node_t* c = target->right;
-  
   node_t* parent = target->parent;
   
   if(parent == tree->root)
@@ -104,7 +102,7 @@ void RotateRight(rbtree *tree, node_t *target)
   target->parent = a;
   if(a != tree->nil)
   {
-    if(a->key <= target->key)
+    if(a->right == parent)
       a->right = target;
     else
       a->left = target;
@@ -181,7 +179,6 @@ node_t *rbtree_insert(rbtree *t, const key_t key) {
     return newNode;
   }
   node_t *pre = t->root, *cur = t->root;
-  int count = 0;
   //pre가 넣을 위치의 부모, cur가 넣을 위치가 될 때까지 탐색
   while (cur != t->nil)
   {
@@ -314,7 +311,6 @@ int rbtree_erase(rbtree *t, node_t *p) {
   node_t* parent = p->parent;
 
 
-
   //자식중 NIL 있음
   int isRight = 0;
   if(t->root != p)
@@ -349,9 +345,6 @@ int rbtree_erase(rbtree *t, node_t *p) {
         child->color = RBTREE_BLACK;
     }
   }
-
-
-
   // 자식 둘다 NIL 아님. 후임자 찾기
   else
   {

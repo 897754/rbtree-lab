@@ -388,7 +388,7 @@ int main(void) {
   printf("Finished test_duplicate_values\n");
   test_multi_instance();
   printf("Finished test_multi_instance\n");
-  test_find_erase_rand(10000, 17);
+  test_find_erase_rand(100000, 55);
   printf("Finished test_find_erase_rand\n");
   printf("Passed all tests!\n");
 }
