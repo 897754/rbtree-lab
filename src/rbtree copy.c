@@ -64,24 +64,24 @@ void RotateLeft(rbtree *tree, node_t *target)
   node_t* c = target->left;
   node_t* parent = target->parent;
 
-  target->parent = a;
   if(parent == tree->root)
     tree->root = target;
-  else
-  {
-    if(a->right == parent)
-      a->right = target;
-    else
-      a->left = target;
-  }
-
-
+  
   parent->parent = target;
   target->left = parent;
 
   parent->right = c;
   if(c != tree->nil)
     c->parent = parent;
+  
+  target->parent = a;
+  if(a != tree->nil)
+  {
+    if(a->right == parent)
+      a->right = target;
+    else
+      a->left = target;
+  }
 }
 void RotateRight(rbtree *tree, node_t *target)
 {
@@ -89,23 +89,24 @@ void RotateRight(rbtree *tree, node_t *target)
   node_t* c = target->right;
   node_t* parent = target->parent;
   
-  target->parent = a;
   if(parent == tree->root)
     tree->root = target;
-  else
-  {
-    if(a->right == parent)
-      a->right = target;
-    else
-      a->left = target;
-  }
-
+  
   parent->parent = target;
   target->right = parent;
 
   parent->left = c;
   if(c != tree->nil)
     c->parent = parent;
+  
+  target->parent = a;
+  if(a != tree->nil)
+  {
+    if(a->right == parent)
+      a->right = target;
+    else
+      a->left = target;
+  }
 }
 
 //관성드리프트
